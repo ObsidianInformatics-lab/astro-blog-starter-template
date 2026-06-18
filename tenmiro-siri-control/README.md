@@ -3,19 +3,29 @@
 Voice control ("Hey Siri, turn the ceiling lights blue") for a Bluetooth LED
 strip sold under the **Tenmiro** brand and driven by the **keepsmile** app.
 
-## Why you can't do this with Shortcuts alone
+## The platform catch (read this first)
 
-iOS **Shortcuts cannot send raw Bluetooth Low Energy (BLE) commands**. The
-only Bluetooth action in Shortcuts toggles your iPhone's radio on/off — there
-is no "write to a BLE characteristic" action. The keepsmile app talks to the
-strip using Apple's Core Bluetooth framework (native app code); Shortcuts has
-no equivalent. The strip is also **not HomeKit-certified**, so the Home app
-can't see it directly either.
+- **iOS / iPadOS Shortcuts cannot send raw Bluetooth Low Energy (BLE)
+  commands.** The only Bluetooth action toggles the device's radio on/off —
+  there is no "write to a BLE characteristic" action. The keepsmile app uses
+  Apple's Core Bluetooth framework (native app code); Shortcuts has no
+  equivalent. The strip is also **not HomeKit-certified**, so the Home app
+  can't see it directly.
+- **macOS Shortcuts CAN do it**, because the Mac version has a **"Run Shell
+  Script"** action (iOS/iPadOS don't). A shell script on a Mac can talk BLE
+  directly — so a Mac needs **no extra hardware** to be both the Siri listener
+  and the Bluetooth transmitter.
 
-So every working solution needs a small **always-on bridge** that sits near
-the light, speaks BLE on its behalf, and exposes something Siri *can* trigger
-(HomeKit, or a plain web request). The three options below differ only in
-*what* plays that bridge role.
+This gives you a clean split:
+
+| Device | Path | Extra hardware? |
+|--------|------|-----------------|
+| **Mac** | Shortcut → Run Shell Script → `tenmiro.py` (Option 0) | none |
+| **iPhone / iPad** | Shortcut → Get Contents of URL → a bridge that does the BLE write (Options A–C) | a bridge near the light |
+
+If you have a Mac, **start with Option 0** — and that same Mac can run the
+Option C web bridge to also serve your iPhone/iPad. The bridge always needs to
+be powered on and within Bluetooth range of the light when you give a command.
 
 ## What your controller is
 
@@ -35,6 +45,51 @@ scanner (nRF Connect / LightBlue on the App Store, or `python bridge.py
 | Brightness 0–100| `7E 00 01 XX 00 00 00 00 EF` (`XX`=0–64h)|
 
 If `FFF3` is ignored, try the `FFE1` characteristic.
+
+---
+
+## Option 0 — macOS native, no extra hardware (start here if you have a Mac)
+
+The Mac's own Bluetooth talks to the strip; a Siri-triggered Shortcut runs a
+one-shot script. Works on any Mac that's awake and in BT range.
+
+### 1. Install the script
+
+```bash
+python3 -m pip install --user bleak
+# from this folder:
+python3 tenmiro.py scan          # find your strip, note its address/name
+TENMIRO_ADDRESS=AA:BB:CC:DD:EE:FF python3 tenmiro.py on   # test it
+```
+
+Copy `tenmiro.py` somewhere stable, e.g. `~/bin/tenmiro.py`. The first run
+prompts for Bluetooth permission — grant it in **System Settings → Privacy &
+Security → Bluetooth**.
+
+### 2. Build the Shortcut (one per command)
+
+1. Open **Shortcuts** on the Mac → **+** new shortcut.
+2. Add the **Run Shell Script** action. Set shell to `/bin/zsh` and the script
+   to, e.g.:
+   ```sh
+   export TENMIRO_ADDRESS=AA:BB:CC:DD:EE:FF
+   /usr/bin/python3 ~/bin/tenmiro.py on
+   ```
+   (Use `off`, `color ff0000`, `brightness 50`, etc. for other shortcuts.)
+3. Name it something speakable — **"Ceiling lights on"**.
+4. Run once to clear the permission prompts.
+5. Say *"Hey Siri, Ceiling lights on."* on the Mac.
+
+> Tip: one shortcut can take input — add an **Ask for Input** (or **Dictate
+> Text**) action for a color name, map it to a hex value, and pass it as the
+> argument, so a single "Set ceiling color" shortcut handles every color.
+
+### Covering iPhone / iPad too
+
+iOS/iPadOS can't run shell scripts, but they can call a URL. Run **Option C**'s
+`bridge.py` on this same Mac, then make iPhone/iPad shortcuts that hit
+`http://<mac-ip>:8765/on` etc. via **Get Contents of URL**. One Mac, all three
+platforms.
 
 ---
 
@@ -151,6 +206,8 @@ color and build the URL dynamically.
 
 ## Which should I pick?
 
+- **Have a Mac that's usually awake near the light?** → **Option 0** (and add
+  Option C on the same Mac for iPhone/iPad). Simplest, no extra hardware.
 - **Want the best Siri/Home experience and have a Pi/mini-PC near the light?**
   → Option A.
 - **HA lives elsewhere, or you'd rather drop a $5 chip by the strip?**
@@ -160,8 +217,11 @@ color and build the URL dynamically.
 
 ## Files in this folder
 
-- [`bridge.py`](./bridge.py) — Option C BLE→HTTP bridge (Python, bleak+aiohttp).
-- [`requirements.txt`](./requirements.txt) — Python deps for the bridge.
+- [`tenmiro.py`](./tenmiro.py) — Option 0 one-shot CLI for the macOS Shortcuts
+  "Run Shell Script" action.
+- [`bridge.py`](./bridge.py) — Option C BLE→HTTP bridge (Python, bleak+aiohttp)
+  for iPhone/iPad (run it on the Mac or a Pi).
+- [`requirements.txt`](./requirements.txt) — Python deps (`bleak`, `aiohttp`).
 - [`esphome-tenmiro.yaml`](./esphome-tenmiro.yaml) — Option B ESP32 config.
 
 ## Credits / references
