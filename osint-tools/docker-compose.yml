@@ -1,0 +1,41 @@
+# OSINT / Threat-Intel platforms via Docker
+# -----------------------------------------------------------------------------
+# Bring up an individual stack with:   docker compose up -d <service>
+# e.g.  docker compose up -d spiderfoot
+#
+# These are heavier, web-UI platforms that are easier to run as containers than
+# to install natively on macOS. Start only what you need.
+#
+# AUTHORIZED USE ONLY.
+# -----------------------------------------------------------------------------
+
+services:
+  # SpiderFoot — automated OSINT engine with a web UI (http://localhost:5001)
+  spiderfoot:
+    image: ghcr.io/smicallef/spiderfoot:latest
+    container_name: spiderfoot
+    ports:
+      - "5001:5001"
+    command: -l 0.0.0.0:5001
+    restart: unless-stopped
+
+  # OWASP ZAP — headless web app scanner / API (http://localhost:8090)
+  zap:
+    image: ghcr.io/zaproxy/zaproxy:stable
+    container_name: zap
+    ports:
+      - "8090:8090"
+    command: zap.sh -daemon -host 0.0.0.0 -port 8090 -config api.disablekey=true
+    restart: unless-stopped
+
+  # WPScan — WordPress vulnerability scanner (run as a one-shot)
+  # Usage: docker compose run --rm wpscan --url https://target.example
+  wpscan:
+    image: wpscanteam/wpscan:latest
+    container_name: wpscan
+    profiles: ["tools"]   # only runs when explicitly invoked
+
+  # OpenCTI — cyber threat intelligence platform (http://localhost:8080)
+  # NOTE: OpenCTI needs a full stack (elasticsearch, redis, minio, rabbitmq).
+  # Use the official compose from https://github.com/OpenCTI-Platform/docker
+  # rather than this single service. Stub left here as a pointer.
