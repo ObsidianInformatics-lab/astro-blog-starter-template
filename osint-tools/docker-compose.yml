@@ -11,11 +11,16 @@
 
 services:
   # SpiderFoot — automated OSINT engine with a web UI (http://localhost:5001)
+  # No public prebuilt image exists, so build from the official source repo.
+  # First run takes a few minutes to build; subsequent runs are cached.
   spiderfoot:
-    image: ghcr.io/smicallef/spiderfoot:latest
+    build: https://github.com/smicallef/spiderfoot.git
+    image: spiderfoot:local
     container_name: spiderfoot
     ports:
       - "5001:5001"
+    volumes:
+      - spiderfoot-data:/var/lib/spiderfoot   # persist scans across restarts
     command: -l 0.0.0.0:5001
     restart: unless-stopped
 
@@ -39,3 +44,6 @@ services:
   # NOTE: OpenCTI needs a full stack (elasticsearch, redis, minio, rabbitmq).
   # Use the official compose from https://github.com/OpenCTI-Platform/docker
   # rather than this single service. Stub left here as a pointer.
+
+volumes:
+  spiderfoot-data:
