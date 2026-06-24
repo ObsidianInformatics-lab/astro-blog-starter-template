@@ -1,0 +1,60 @@
+# OSINT / Security Tooling Brewfile
+# -----------------------------------------------------------------------------
+# Install everything missing with:   brew bundle --file=osint-tools/Brewfile
+# `brew bundle` is idempotent: anything you already have is skipped automatically,
+# so this only installs the tools you don't yet have set up.
+#
+# AUTHORIZED USE ONLY. Point active/scanning tools only at systems you own or
+# have explicit written permission to test.
+# -----------------------------------------------------------------------------
+
+# --- Recon / OSINT ----------------------------------------------------------
+brew "theharvester"   # Emails, subdomains, hosts, names from public sources
+brew "amass"          # OWASP deep subdomain/asset discovery & mapping
+brew "subfinder"      # Fast passive subdomain enumeration
+brew "exiftool"       # Metadata extraction from files/images
+
+# --- Network / Infra scanning ----------------------------------------------
+brew "masscan"        # Internet-scale port scanner
+brew "rustscan"       # Ultra-fast port scanner (feeds nmap)
+brew "naabu"          # Fast port scanner (ProjectDiscovery)
+brew "nmap"           # The classic network mapper
+brew "dnsx"           # Fast, multi-purpose DNS toolkit
+
+# --- Web app testing --------------------------------------------------------
+brew "httpx"          # Probe/fingerprint live web servers en masse
+brew "nuclei"         # Template-based vulnerability scanner
+brew "katana"         # Next-gen web crawler (ProjectDiscovery)
+brew "ffuf"           # Fast web fuzzer / content discovery
+brew "gobuster"       # Directory/DNS/vhost bruteforcing
+brew "sqlmap"         # Automated SQL injection testing
+
+# --- Credentials / hashes / passwords ---------------------------------------
+brew "hashcat"        # GPU password cracking
+brew "john-jumbo"     # John the Ripper (jumbo build)
+brew "hydra"          # Network login bruteforcer
+
+# --- Wireless / RF ----------------------------------------------------------
+brew "kismet"         # Wireless sniffing/detection
+brew "aircrack-ng"    # Wi-Fi auditing suite
+
+# --- Forensics / reverse engineering ----------------------------------------
+brew "radare2"        # Reverse-engineering framework
+brew "yara"           # Malware pattern matching
+brew "binwalk"        # Firmware/binary analysis
+
+# --- Frameworks -------------------------------------------------------------
+brew "metasploit"     # Exploitation framework
+
+# --- Casks (GUI apps) -------------------------------------------------------
+cask "ghidra"         # NSA reverse-engineering suite
+cask "cutter"         # radare2 GUI
+cask "zap"            # OWASP ZAP web app proxy/scanner
+# cask "maltego"      # Visual link analysis (uncomment; requires free account)
+
+# -----------------------------------------------------------------------------
+# Python-based tools (install via pipx, not Homebrew):
+#   brew install pipx && pipx ensurepath
+#   pipx install spiderfoot maigret holehe ghunt photon recon-ng \
+#                volatility3 sherlock-project responder
+# -----------------------------------------------------------------------------
