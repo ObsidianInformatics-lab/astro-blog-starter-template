@@ -203,3 +203,6 @@ dist
 
 # OSINT scan outputs — contain personal data, never commit
 osint-tools/scans/
+
+# SpiderFoot API keys — secrets, never commit (only the .example template is tracked)
+osint-tools/spiderfoot/api_keys.env

@@ -54,6 +54,56 @@ etc. and are too heavy to inline here:
 - MISP: https://github.com/MISP/misp-docker
 - TheHive/Cortex: https://github.com/TheHive-Project/Docker-Templates
 
+## 4. Running scans from the CLI
+
+SpiderFoot scans (output lands in `scans/`, which is gitignored — it contains
+personal data):
+
+```bash
+# Passive email scan (no active probing)
+python3 sf.py -s you@example.com -u passive -o csv -q > scans/email.csv
+
+# Full domain footprint (DNS, subdomains, hosts, related emails, tech stack)
+python3 sf.py -s example.com -u footprint -o csv -q > scans/domain.csv
+```
+
+Use-case flags: `passive` (quietest) · `footprint` (best for domains you own) ·
+`investigate` · `all` (everything, incl. active modules).
+
+## 5. API keys for deeper results
+
+Out of the box, modules that need API keys (HaveIBeenPwned, Hunter.io, Shodan,
+SecurityTrails, etc.) are skipped, so a keyless scan only sees what's freely
+public. Adding even a few **free-tier** keys dramatically deepens coverage.
+
+The CLI has no flag for keys — SpiderFoot reads them from its config DB. The
+`spiderfoot/` folder automates loading them:
+
+```bash
+cd osint-tools/spiderfoot
+cp api_keys.env.example api_keys.env     # api_keys.env is gitignored (secrets)
+$EDITOR api_keys.env                      # paste your keys (signup URLs are in the file)
+SPIDERFOOT_HOME=/path/to/spiderfoot python3 apply_keys.py
+```
+
+`apply_keys.py` writes each key into SpiderFoot's config store so every
+subsequent `sf.py` scan and the web UI use them automatically. Re-run it
+whenever you add or change a key.
+
+## 6. Username enumeration
+
+Cross-reference a handle across hundreds of sites:
+
+```bash
+sherlock USERNAME --print-found              # fast, broad — but prone to FALSE POSITIVES
+maigret  USERNAME --csv --txt -fo ./out      # slower, actively verifies — far more accurate
+```
+
+> **Caveat:** Sherlock often reports a site as "found" when it returns 200 for
+> *any* username (no real 404). If two different usernames yield an identical
+> hit count, treat the list as inflated. Prefer Maigret's verified results, or
+> manually open each Sherlock URL before trusting it.
+
 ## What's included
 
 | Category | Tools |
